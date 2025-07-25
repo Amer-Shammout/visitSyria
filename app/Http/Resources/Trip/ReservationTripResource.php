@@ -2,16 +2,20 @@
 
 namespace App\Http\Resources\Trip;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ReservationTripResource extends JsonResource
 {
-    public function toArray(Request $request): array
+    public function toArray($request)
     {
         return [
-            "trip"=>new TripResource($request),
-            "qr_code"=>$this->bookings->qr_code
+            'id'=> $this->id,
+            'name'=> $this->name,
+            'description'=> $this->description,
+            'season'=> $this->season,
+            'start_date'=> $this->start_date,
+            'duration'=> $this->duration,
+            'price'=> $this->price,
         ];
     }
 }
