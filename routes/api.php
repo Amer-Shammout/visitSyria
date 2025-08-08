@@ -1,19 +1,17 @@
 <?php
 
+    use Illuminate\Support\Facades\Route;
     use App\Http\Controllers\CityController;
     use App\Http\Controllers\WeatherController;
-    use Illuminate\Support\Facades\Route;
     use App\Http\Controllers\AuthController;
     use App\Http\Controllers\BookingController;
     use App\Http\Controllers\EventController;
     use App\Http\Controllers\FeedbackController;
-
-use App\Http\Controllers\FlightController;
-use App\Http\Controllers\PlaceController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\RouteController;
-use App\Http\Controllers\TripController;
-use App\Http\Controllers\WebhookController;
+    use App\Http\Controllers\FlightController;
+    use App\Http\Controllers\PlaceController;
+    use App\Http\Controllers\PaymentController;
+    use App\Http\Controllers\TripController;
+    use App\Http\Controllers\WebhookController;
 
     // Route::get('/user', function (Request $request) {
     //     return $request->user();
@@ -63,6 +61,7 @@ use App\Http\Controllers\WebhookController;
         Route::post('trips', [TripController::class,'store']);
         Route::delete('trips/{id}', [TripController::class,'destroy']);
         Route::post('trip/update/{id}', [TripController::class,'update']);
+        Route::post('trips/cancel/{id}',[TripController::class,'cancel']);
 
         Route::post('reserve', [BookingController::class, 'reserve']);
 
@@ -85,8 +84,6 @@ use App\Http\Controllers\WebhookController;
     Route::get('trip/offers', [TripController::class,'offers']);
     Route::get('trips/similar/{id}',[TripController::class,'similarTrips']);
 
-    
-
     Route::get('places/restaurants', [PlaceController::class, 'getRestaurants']);
     Route::get('places/hotels', [PlaceController::class, 'getHotels']);
     Route::get('places/tourist', [PlaceController::class, 'getTouristPlaces']);
@@ -100,24 +97,17 @@ use App\Http\Controllers\WebhookController;
     Route::get('places/hotels/byCity', [PlaceController::class, 'getHotelsByCity']);
     Route::get('places/tourist/{classification}/city/{cityName}', [PlaceController::class, 'getTouristPlacesByClassificationAndCity']);
 
-
     Route::get('places', [PlaceController::class,'index']);
+    Route::get('places/{id}/similar', [PlaceController::class, 'similarPlaces']);
     Route::get('places/{id}', [PlaceController::class,'show']);
 
-
-    
-    Route::get('events', [EventController::class,'index']);
+        Route::get('events', [EventController::class,'index']);
     Route::get('events/{id}', [EventController::class,'show']);
 
     Route::get('cities', [CityController::class, 'index']);
     Route::get('cities/{id}', [CityController::class, 'show']);
 
-    
-    Route::get('/flights/from-syria', [FlightController::class, 'fromSyria']);
-    Route::get('/flights/to-syria',   [FlightController::class, 'toSyria']);
-    Route::get('/flights/syria-all',  [FlightController::class, 'syriaAll']);
-
-
+    Route::get('flights/search', [FlightController::class, 'search']);
 
     Route::group(['middleware' => ['jwt.auth']], function () {
         Route::post('/trips/{trip}/reserve', [BookingController::class, 'reserve']);
@@ -134,7 +124,6 @@ use App\Http\Controllers\WebhookController;
         Route::post('stripe/refund/{id}',   [PaymentController::class, 'refund']);
     });
 
-    // Public endpoint for Stripe webhooks
     Route::post('stripe/webhook', WebhookController::class);
 
 ?>

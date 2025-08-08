@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PlaceStoreRequest;
 use App\Http\Requests\PlaceUpdateRequest;
 use App\Http\Resources\PlaceResource;
+use App\Http\Resources\ShowPlaceResource;
 use App\Models\City;
+use App\Models\Place;
 use App\Services\PlaceService;
 use Illuminate\Http\Request;
 
@@ -23,18 +25,23 @@ class PlaceController extends Controller
         $places = $this->placeService->getAll($filters);
         return PlaceResource::collection($places);
     }
-public function cityPlaces(Request $request, $cityName)
-{
-    $city = City::where('name', $cityName)->first();
-    if (!$city) {
-        return response()->json(['message' => 'City not found'], 404);
+    public function cityPlaces(Request $request, $cityName)
+    {
+        $city = City::where('name', $cityName)->first();
+        if (!$city) {
+            return response()->json(['message' => 'City not found'], 404);
+        }
+        $filters = $request->only(['type']);
+        $filters['city_id'] = $city->id;
+        $places = $this->placeService->getAll($filters);
+        return PlaceResource::collection($places);
     }
-    $filters = $request->only(['type']);
-    $filters['city_id'] = $city->id;
-    $places = $this->placeService->getAll($filters);
-    return PlaceResource::collection($places);
-}
-
+    public function similarPlaces($id)
+    {
+        $place = Place::findOrFail($id);
+        $similar = $this->placeService->getSimilarPlaces($id, $place->type);
+        return PlaceResource::collection($similar);
+    }
     public function store(PlaceStoreRequest $request)
     {
         $data = $request->validated();
@@ -46,11 +53,33 @@ public function cityPlaces(Request $request, $cityName)
         return response()->json(['place' => new PlaceResource($place)],201);
     }
 
-    public function show($id)
-    {
-        $place = $this->placeService->getById($id);
-        return new PlaceResource($place);
+public function show($id)
+{
+    $place = $this->placeService->getPlaceDetails($id);
+    
+    if (!$place) {
+        return response()->json(['message' => 'Place not found'], 404);
     }
+    
+    $similar = collect($this->placeService->getSimilarPlaces($id, $place->type))
+        ->map(function ($p) {
+            $firstMedia = $p->media()->first();
+            $imageUrl  = $firstMedia
+                ? asset('storage/' . ltrim($firstMedia->url, '/'))
+                : null;
+            return [
+                'name'      => $p->name,
+                'rating'    => round($p->avg_rating, 2),
+                'rank'      => $p->rank,
+                'image_url' => $imageUrl,
+            ];
+        })
+        ->values();
+    return (new ShowPlaceResource($place))
+        ->additional(['similar_places' => $similar]);
+}
+
+
 
    public function update(PlaceUpdateRequest $request, $id)
     {
